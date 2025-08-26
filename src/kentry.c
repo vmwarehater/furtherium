@@ -10,8 +10,8 @@
 
 
 void kernel_entry(){
+    write_string_to_uart("Loading Futherium.....\n\n");
     load_exception_vector();
-    write_string_to_uart("Futherium Educational Kernel\n\n");
     while(1){
         write_to_uart(get_value_from_rtc());
         delay_execution(1);

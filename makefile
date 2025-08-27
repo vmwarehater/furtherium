@@ -9,15 +9,12 @@ clean:
 	rm furtherk.elf
 
 
-
-test:
-	xmake build aarch64-virt
-	make run
-
-
 test-all:
 	make clean
-	echo Building aarch64-virt
+	@echo Building aarch64-virt
 	xmake build aarch64-virt
-	echo Building Stub
+	@echo Building Stub
 	xmake build stub
+	@echo if you see this everything was successful!
+
+

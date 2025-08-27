@@ -23,11 +23,8 @@ target("stub")
     add_files("src/system/*.c", "src/system/**/.c")
     add_files("src/arch/stub/*.c", "src/arch/stub/*.S")
     add_files("src/board/stub/*.c", "src/board/stub/*.S")
-    -- we will never use MIPS so I decided to choose that architecture
-    -- for the stub
-    -- (if anyone ever does make a MIPS port lmk and remove this)
-    add_cflags("--target=mips-none-elf -ffreestanding", {force = true})
-    add_asflags("--target=mips-none-elf -ffreestanding -nostdlib -fno-rtti", {force = true})
+    add_cflags("-ffreestanding", {force = true})
+    add_asflags("-ffreestanding -nostdlib -fno-rtti", {force = true})
     add_ldflags("-nostdlib -T linker/stub/linker.ld", {force = true})
 
 

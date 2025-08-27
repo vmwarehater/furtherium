@@ -1,16 +1,17 @@
 #include "../exception.h"
-
+#include "../../board/uart.h"
 
 
 
 
 
 void exception_unimplemented(){
-    *(volatile uint64_t*)0x09000000 = '?';
+    write_string_to_uart("Unknown Exception has Occured, halting system");
     while(1){continue;}
 }
 
 void exception_error(){
-    *(volatile uint64_t*)0x09000000 = 'e';
+    write_string_to_uart("An error has occured, dumping registers...\n\n\n");
+    // TODO: dump registers
     while(1){continue;}
 }

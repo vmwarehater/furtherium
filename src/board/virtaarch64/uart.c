@@ -4,6 +4,11 @@
 #define UART_ADDRESS 0x09000000
 
 
+void setup_uart(){
+    // STUB
+    return;
+}
+
 void write_to_uart(uint8_t c){
     *(volatile uint8_t*)UART_ADDRESS = c;
 }

@@ -27,6 +27,19 @@ target("stub")
     add_asflags("-ffreestanding -nostdlib -fno-rtti", {force = true})
     add_ldflags("-nostdlib -T linker/stub/linker.ld", {force = true})
 
+target("aarch64-rp4")
+    set_toolchains("clangk")
+    set_kind("binary")
+    set_targetdir(".")
+    set_filename("furtherk.elf")
+    add_files("src/*.c")
+    add_files("src/system/*.c", "src/system/**/.c")
+    add_files("src/arch/aarch64/*.c", "src/arch/aarch64/*.S")
+    add_files("src/board/rp4aarch64/*.c", "src/board/rp4aarch64/*.S")
+    add_cflags("--target=aarch64-none-elf -ffreestanding", {force = true})
+    add_asflags("--target=aarch64-none-elf -ffreestanding -nostdlib -fno-rtti", {force = true})
+    add_ldflags("-nostdlib -T linker/rp4aarch64/linker.ld", {force = true})
+
 
 
 

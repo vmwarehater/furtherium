@@ -1,6 +1,7 @@
-#include "uart.h"
+#include "../uart.h"
 #include <stdint.h>
 
+#define UART_ADDRESS 0x09000000
 
 
 void write_to_uart(uint8_t c){

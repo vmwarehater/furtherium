@@ -11,5 +11,13 @@ clean:
 
 
 test:
-	xmake
+	xmake build aarch64-virt
 	make run
+
+
+test-all:
+	make clean
+	echo Building aarch64-virt
+	xmake build aarch64-virt
+	echo Building Stub
+	xmake build stub

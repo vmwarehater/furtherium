@@ -1,8 +1,8 @@
 
 #include <stdint.h>
-#include "arch/aarch64/exception.h"
-#include "board/virt/rtc.h"
-#include "board/virt/uart.h"
+#include "arch/exception.h"
+#include "board/rtc.h"
+#include "board/uart.h"
 #include "system/misc.h"
 
 

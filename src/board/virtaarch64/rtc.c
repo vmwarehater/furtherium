@@ -1,8 +1,9 @@
-#include "rtc.h"
+#include "../rtc.h"
 #include <stdint.h>
 
 
 
+#define RTC_ADDRESS 0x09010000
 
 
 

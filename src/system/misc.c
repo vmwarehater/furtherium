@@ -1,4 +1,4 @@
-#include "../board/virt/rtc.h"
+#include "../board/rtc.h"
 
 
 

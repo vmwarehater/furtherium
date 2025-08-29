@@ -91,6 +91,8 @@ void* memcpy(void* dest, const void* src, size_t size){
     return dest;
 }
 
+void __stack_chk_fail(){}
+
 static inline char hex_to_char(uint64_t hex){
     if(hex >= 0x0 && hex <= 0x9){
         return 48 + hex;

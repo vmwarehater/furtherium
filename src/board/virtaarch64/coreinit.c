@@ -5,9 +5,9 @@
 
 
 
-
+uint64_t memaddr = 0;
 
 void setup_core_system(){
-    // STUB
+    memaddr = 0x50000 + 0x40100000;
     return;
 }

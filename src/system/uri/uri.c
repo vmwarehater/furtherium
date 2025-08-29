@@ -73,3 +73,32 @@ uint8_t send_to_url(char* url, void* data, uint64_t size){
     return 0;
 }
 
+
+void* recv_from_url(char* url, uint64_t size){
+    char scheme[NAMING_SIZE];
+    char hostandpath[NAMING_SIZE + 1024];
+    char host[NAMING_SIZE];
+    char path[1024];
+    int sch = -1;
+    int hos = -1;
+    strsplit(url, 
+        ':', scheme, 
+        NAMING_SIZE, hostandpath, NAMING_SIZE + 1024);
+    strsplit(hostandpath, 
+        '\\', host, 
+        NAMING_SIZE, path,1024);
+    for(int i = 0; i <= curScheme; i++){
+        if(strcmp(scheme, schemes[i].name) == 0){
+            sch = i;
+            break;
+        }
+    }
+    if(sch == -1) return NULL;
+    for(int i = 0; i <= schemes[sch].curHost; i++){
+        if(strcmp(host, schemes[sch].hosts[i].name) == 0){
+            hos = i;
+        }
+    }
+    if(hos == -1) return NULL;
+    return schemes[sch].hosts[hos].RecvHandler(size, path);
+}

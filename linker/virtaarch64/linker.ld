@@ -14,4 +14,5 @@ SECTIONS {
     . = ALIGN(8);
     . += 0x30000;
     sp_top = .;
+    stack_size = 0x30000;
 }

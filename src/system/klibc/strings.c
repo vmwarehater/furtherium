@@ -1,4 +1,5 @@
 #include "strings.h"
+#include "maths.h"
 #include <stdint.h>
 
 
@@ -90,5 +91,43 @@ void* memcpy(void* dest, const void* src, size_t size){
     return dest;
 }
 
+static inline char hex_to_char(uint64_t hex){
+    if(hex >= 0x0 && hex <= 0x9){
+        return 48 + hex;
+    } else return (65 - 10) + hex;
+}
 
-void __stack_chk_fail(){}
+
+uint8_t xtoa(uint64_t integer, char* string, uint16_t size){
+    for(int i = 0; i <= size; i++){
+        string[i] = 0x0;
+    }
+    if(integer == 0){
+        if(size <= 2){
+            return 1;
+        }
+        string[0] = '0';
+        string[1] = '\0';
+        return 0;
+    }
+    uint64_t temp = integer;
+    uint16_t digits = 0;
+    while(temp > 0x0){
+        temp /= 16;
+        digits++;
+    }
+    temp = integer;
+    uint64_t index = 0;
+    for(int i = digits - 1; i >= 0; i--){
+        if(index >= size - 1){
+            break;
+        }
+        uint64_t div = pow_64(16, i);
+        uint64_t singleDigit = temp / div;
+        string[index] = hex_to_char(singleDigit);
+        index++;
+        temp %= div;
+    }
+    string[index] = '\0';
+    return 0;
+} 

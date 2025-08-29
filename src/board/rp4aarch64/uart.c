@@ -44,7 +44,6 @@ enum
 };
 
 void setup_uart(){
-    // uart is now dead
     *(volatile uint32_t*)(MMIO_BASE + UART0_CR) = 0x00000000;
     *(volatile uint32_t*)(MMIO_BASE + GPPUD) = 0x00000000;
     *(volatile uint32_t*)(MMIO_BASE + GPPUDCLK0) = (1<<14) | (1<<15);

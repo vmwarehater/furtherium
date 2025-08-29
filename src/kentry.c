@@ -5,37 +5,49 @@
 #include "board/coreinit.h"
 #include "board/rtc.h"
 #include "board/uart.h"
+#include "system/mem/chunkalloc.h"
 #include "system/misc.h"
 #include "system/klibc/strings.h"
+#include "system/klibc/strings.h"
+
 #include "system/uri/uri.h"
 
+extern uint64_t sp_top;
 
-
-
-void SendHandler(void* data, size_t size, char* path){
-    write_string_to_uart(data);
-    write_string_to_uart(path);
-}
-
-void* RecvHandler(size_t size, char* path){
-    *(volatile uint8_t*)0x40001000 = path[0];
-    return (void*)0x40001000;
-}
 
 void kernel_entry(void){
     setup_core_system();
+    chunk_allocator_setup();
     setup_uart();
     write_string_to_uart("Loading Futherium.....\n\n");
     load_exception_vector();
     create_scheme("device");
-    host_t host = {
-        "test",
-        SendHandler,
-        RecvHandler
-    };
-    create_host("device", host);
-    send_to_url("device:test\\paths\\pol", "Hello!", 64);
     
+    char idk[30];
+    char* h = allocate_single_chunk();
+
+    xtoa((uint64_t)h, idk, 30);
+    write_string_to_uart(idk);
+    write_string_to_uart("\n");
+
+    // this goes backwards and then forwards again??
+    // idk, needs to be fixed
+    char* l = allocate_single_chunk();
+    char* pp = allocate_single_chunk();
+
+    xtoa((uint64_t)pp, idk, 30);
+    write_string_to_uart(idk);
+    write_string_to_uart("\n");
+
+    free_single_chunk(h);
+    char* p = allocate_single_chunk();
+
+    xtoa((uint64_t)h, idk, 30);
+    write_string_to_uart(idk);
+    write_string_to_uart("\n");
+
+
+
     while(1){
         write_to_uart(get_value_from_rtc());
         delay_execution(1);

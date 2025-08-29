@@ -28,7 +28,7 @@ typedef struct _host {
 uint8_t create_scheme(char* scheme_name);
 uint8_t create_host(char* scheme_name, host_t host);
 uint8_t send_to_url(char* url, void* data, uint64_t size);
-
+void* recv_from_url(char* url, uint64_t size);
 
 
 #endif

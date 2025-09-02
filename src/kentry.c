@@ -5,6 +5,7 @@
 #include "board/coreinit.h"
 #include "board/rtc.h"
 #include "board/uart.h"
+#include "system/klibc/puts.h"
 #include "system/mem/chunkalloc.h"
 #include "system/misc.h"
 #include "system/klibc/strings.h"
@@ -17,37 +18,28 @@ extern uint64_t sp_top;
 
 
 void kernel_entry(void){
-    setup_uart();
     setup_core_system();
+    setup_uart();
     chunk_allocator_setup();    
-    write_string_to_uart("Loading Furtherium.....\n\n");
+    puts("Loading Furtherium.....\n\n");
     load_exception_vector();
     create_scheme("device");
     
-    char idk[30];
     char* h = allocate_single_chunk();
 
-    xtoa((uint64_t)h, idk, 30);
-    write_string_to_uart(idk);
-    write_string_to_uart("\n");
-
+    xputs((uint64_t)h);
+    
     // this goes backwards and then forwards again??
     // idk, needs to be fixed
     char* l = allocate_single_chunk();
+    xputs((uint64_t)l);
     char* pp = allocate_single_chunk();
-
-    xtoa((uint64_t)pp, idk, 30);
-    write_string_to_uart(idk);
-    write_string_to_uart("\n");
-
+    xputs((uint64_t)pp);
+    
     free_single_chunk(h);
     char* p = allocate_single_chunk();
-
-    xtoa((uint64_t)h, idk, 30);
-    write_string_to_uart(idk);
-    write_string_to_uart("\n");
-
-
+    xputs((uint64_t)p);
+    
 
     while(1){
         write_to_uart(get_value_from_rtc());

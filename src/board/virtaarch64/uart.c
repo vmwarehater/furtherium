@@ -72,7 +72,7 @@ void setup_uart(){
     base_clock = 24000000;
     baudrate = 115200;
     data_bits = 8;
-    data_bits = 1;
+    stop_bits = 1;
     reset();
     return;
 }
@@ -84,7 +84,7 @@ void write_to_uart(uint8_t c){
 }
 
 uint8_t read_from_uart_without_blocking(){
-    return *(volatile uint8_t*)UART_ADDRESS;
+    return *reg(DR_OFFSET);
 }
 
 void write_string_to_uart(char* string){

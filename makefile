@@ -3,7 +3,7 @@ run-aarch64-virt:
 		-serial mon:stdio -display sdl
 
 run-aarch64-rp4:
-	qemu-system-aarch64 -M raspi4b -serial stdio -kernel furtherk.elf
+	qemu-system-aarch64 -M raspi4b -serial mon:stdio -kernel furtherk.elf
 	
 clean:
 	rm -rf .xmake

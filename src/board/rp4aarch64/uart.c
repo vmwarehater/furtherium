@@ -3,71 +3,89 @@
 
 
 
+// thanks to https://krinkinmu.github.io/2020/11/29/PL011.html for helping me with this!
 
-extern uint64_t MMIO_BASE;
+#define UART_ADDRESS 0xFE201000
 
-// thanks to osdev.org for helping me with this!
+#define DR_OFFSET 0x000
+#define FR_OFFSET 0x018
+#define IBRD_OFFSET 0x024
+#define FBRD_OFFSET 0x028
+#define LCR_OFFSET 0x02c
+#define CR_OFFSET 0x030
+#define IMSC_OFFSET 0x038
+#define DMACR_OFFSET 0x048
 
-enum
-{
-    GPIO_BASE = 0x200000,
 
-    GPPUD = (GPIO_BASE + 0x94),
+#define FR_BUSY (1 << 3)
+#define CR_TXEN (1 << 8)
+#define CR_UARTEN (1 << 0)
+#define LCR_FEN (1 << 4)
+#define LCR_STP2 (1 << 3)
 
-    GPPUDCLK0 = (GPIO_BASE + 0x98),
+static uint64_t base_clock = 0;
+static uint32_t baudrate = 0;
+static uint32_t data_bits = 0;
+static uint32_t stop_bits = 0;
 
-    UART0_BASE = (GPIO_BASE + 0x1000),
+static inline volatile uint32_t* reg(uint32_t offset){
+    return (volatile uint32_t*)UART_ADDRESS + offset;
+}
 
-    UART0_DR     = (UART0_BASE + 0x00),
-    UART0_RSRECR = (UART0_BASE + 0x04),
-    UART0_FR     = (UART0_BASE + 0x18),
-    UART0_ILPR   = (UART0_BASE + 0x20),
-    UART0_IBRD   = (UART0_BASE + 0x24),
-    UART0_FBRD   = (UART0_BASE + 0x28),
-    UART0_LCRH   = (UART0_BASE + 0x2C),
-    UART0_CR     = (UART0_BASE + 0x30),
-    UART0_IFLS   = (UART0_BASE + 0x34),
-    UART0_IMSC   = (UART0_BASE + 0x38),
-    UART0_RIS    = (UART0_BASE + 0x3C),
-    UART0_MIS    = (UART0_BASE + 0x40),
-    UART0_ICR    = (UART0_BASE + 0x44),
-    UART0_DMACR  = (UART0_BASE + 0x48),
-    UART0_ITCR   = (UART0_BASE + 0x80),
-    UART0_ITIP   = (UART0_BASE + 0x84),
-    UART0_ITOP   = (UART0_BASE + 0x88),
-    UART0_TDR    = (UART0_BASE + 0x8C),
+static inline void calculate_divisors(uint32_t* integer, uint32_t* frac){
+    uint32_t div = 4 * base_clock / baudrate;
 
-    MBOX_BASE    = 0xB880,
-    MBOX_READ    = (MBOX_BASE + 0x00),
-    MBOX_STATUS  = (MBOX_BASE + 0x18),
-    MBOX_WRITE   = (MBOX_BASE + 0x20)
-};
+    *frac = div & 0x3f;
+    *integer = (div >> 6) & 0xffff;
+}
+
+static inline void wait_tx_complete(){
+    while((*reg(FR_OFFSET) * FR_BUSY) != 0){continue;}
+}
+
+static inline void reset(){
+    uint32_t cr = *reg(CR_OFFSET);
+    uint32_t lcr = *reg(LCR_OFFSET);
+    uint32_t ibrd, fbrd;
+
+    *reg(CR_OFFSET) = (cr & CR_UARTEN);
+    wait_tx_complete();
+
+    *reg(LCR_OFFSET) = (lcr & ~LCR_FEN);
+
+    calculate_divisors(&ibrd, &fbrd);
+    *reg(IBRD_OFFSET) = ibrd;
+    *reg(FBRD_OFFSET) = fbrd;
+
+    lcr = 0x0;
+
+    lcr |= ((data_bits - 1) & 0x3) << 5;
+
+    if(stop_bits == 2) lcr |= LCR_STP2;
+    *reg(IMSC_OFFSET) = 0x7ff;
+    *reg(DMACR_OFFSET) = 0x0;
+    *reg(CR_OFFSET) = CR_TXEN;
+    *reg(CR_OFFSET) = CR_TXEN | CR_UARTEN;
+}
 
 void setup_uart(){
-    *(volatile uint32_t*)(MMIO_BASE + UART0_CR) = 0x00000000;
-    *(volatile uint32_t*)(MMIO_BASE + GPPUD) = 0x00000000;
-    *(volatile uint32_t*)(MMIO_BASE + GPPUDCLK0) = (1<<14) | (1<<15);
-    *(volatile uint32_t*)(MMIO_BASE + UART0_ICR) = 0x7FF;
-    *(volatile uint32_t*)(MMIO_BASE + UART0_IBRD) = 1;
-    *(volatile uint32_t*)(MMIO_BASE + UART0_FBRD) = 1;
-    *(volatile uint32_t*)(MMIO_BASE + UART0_FBRD) = 40;
-    *(volatile uint32_t*)(MMIO_BASE + UART0_LCRH) = (1<<4) | (1<<5) | (1<<6);
-    *(volatile uint32_t*)(MMIO_BASE + UART0_IMSC) = (1<<1) | (1<<4) | (1<<5) |
-                                                    (1<<7) | (1<<8) | (1<<9) | (1<<10);
-    *(volatile uint32_t*)(MMIO_BASE + UART0_CR) = (1<<0) | (1<<8) | (1<<9);
+    base_clock = 48000000;
+    baudrate = 115200;
+    data_bits = 8;
+    stop_bits = 1;
+    reset();
     return;
 }
 
 void write_to_uart(uint8_t c){
-    while(*(volatile uint32_t*)(MMIO_BASE + UART0_FR) & (1<<5)){
-        continue;
-    }
-    *(volatile uint32_t*)(MMIO_BASE + UART0_DR) = c;
+    wait_tx_complete();
+    for(int i = 0; i < 1000000; i++);
+    *reg(DR_OFFSET) = c;
+    //*(volatile uint8_t*)UART_ADDRESS = c;
 }
 
 uint8_t read_from_uart_without_blocking(){
-    // STUB;
-    return 0;
+    return *reg(DR_OFFSET);
 }
 
 void write_string_to_uart(char* string){
@@ -76,4 +94,3 @@ void write_string_to_uart(char* string){
         string++;
     }
 }
-

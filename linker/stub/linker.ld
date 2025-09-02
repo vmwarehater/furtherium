@@ -12,6 +12,6 @@ SECTIONS {
         *(.bss)
     }
     . = ALIGN(8);
-    . += 0x2000;
+    . += 0x30000;
     sp_top = .;
 }

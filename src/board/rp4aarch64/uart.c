@@ -76,3 +76,4 @@ void write_string_to_uart(char* string){
         string++;
     }
 }
+

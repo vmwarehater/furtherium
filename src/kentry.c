@@ -15,11 +15,12 @@
 extern uint64_t sp_top;
 
 
+
 void kernel_entry(void){
-    setup_core_system();
-    chunk_allocator_setup();
     setup_uart();
-    write_string_to_uart("Loading Futherium.....\n\n");
+    setup_core_system();
+    chunk_allocator_setup();    
+    write_string_to_uart("Loading Furtherium.....\n\n");
     load_exception_vector();
     create_scheme("device");
     

@@ -6,7 +6,7 @@
 // thanks to https://krinkinmu.github.io/2020/11/29/PL011.html for helping me with this!
 
 #define UART_ADDRESS 0xFE201000
-
+#define GPPUD_ADDRESS 0xFE200094
 #define DR_OFFSET 0x000
 #define FR_OFFSET 0x018
 #define IBRD_OFFSET 0x024
@@ -15,7 +15,7 @@
 #define CR_OFFSET 0x030
 #define IMSC_OFFSET 0x038
 #define DMACR_OFFSET 0x048
-
+#define ICR_OFFSET 0x044
 
 #define FR_BUSY (1 << 3)
 #define CR_TXEN (1 << 8)
@@ -29,6 +29,11 @@ static uint32_t data_bits = 0;
 static uint32_t stop_bits = 0;
 
 
+static inline void delay(int32_t count)
+{
+	asm volatile("__delay_%=: subs %[count], %[count], #1; bne __delay_%=\n"
+		 : "=r"(count): [count]"0"(count) : "cc");
+}
 
 static inline volatile uint32_t* reg(uint32_t offset){
     return (volatile uint32_t*)UART_ADDRESS + offset;
@@ -46,10 +51,16 @@ static inline void calculate_divisors(uint32_t* integer, uint32_t* frac){
 }
 
 static inline void wait_tx_complete(){
-    while((*reg(FR_OFFSET) * FR_BUSY) != 0){continue;}
+    while((*reg(FR_OFFSET) * FR_BUSY) != 0);
 }
 
 static inline void reset(){
+    *(volatile uint64_t*)GPPUD_ADDRESS = 0x00000000;
+    delay(150);
+    *(volatile uint64_t*)0xFE200098 = (1 << 14) | (1 << 15);
+    delay(150);
+    *(volatile uint64_t*)0xFE200098 = 0x00000000;
+    *reg(ICR_OFFSET) = 0x7FF;
     uint32_t cr = *reg(CR_OFFSET);
     uint32_t lcr = *reg(LCR_OFFSET);
     uint32_t ibrd, fbrd;
@@ -72,6 +83,7 @@ static inline void reset(){
     *reg(DMACR_OFFSET) = 0x0;
     *reg(CR_OFFSET) = CR_TXEN;
     *reg(CR_OFFSET) = CR_TXEN | CR_UARTEN;
+    *reg(CR_OFFSET) =  (1 << 0) | (1 << 8) | (1 << 9);
 }
 
 void setup_uart(){

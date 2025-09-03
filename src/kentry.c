@@ -3,9 +3,11 @@
 #include <stdint.h>
 #include "arch/exception.h"
 #include "board/coreinit.h"
+#include "board/uart.h"
 #include "system/coredevices/coredev.h"
 #include "system/klibc/puts.h"
 
+#include "system/kshell/kshell.h"
 #include "system/mem/chunkalloc.h"
 #include "system/misc.h"
 
@@ -36,8 +38,8 @@ void kernel_entry(void){
     free_multiple_chunks(pp, 10);
     char* p = allocate_multiple_chunks(4);
     xputs((uint64_t)p);
-    while(1){
-        putchar((uint64_t)recv_from_url("device:rtc", 1));
-        delay_execution(1);
-    }
+    
+
+    // system ends, start emergency shell on the UART
+    begin_backup_kernel_shell();
 }

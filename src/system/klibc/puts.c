@@ -30,6 +30,32 @@ char getchar_unblocking(){
     return (char)((uint64_t)recv_from_url("device:uart\\read\\unblocking", 1));
 }
 
+// taken from the nearerOS impl, my other OS which this kernel will be replacing that kernel for
+void gets_s(char* string, uint16_t size, uint8_t cleanBuffer){
+    if(cleanBuffer == 1){
+        for(int i = 0; i <= size; i++){
+            string[i] = '\0';
+        }
+    }
+    uint16_t curIndex = 0;
+    uint16_t sizeCutByTwo = size - 2;
+    while(curIndex < sizeCutByTwo){
+        char character = getchar();
+        if(character == 13) break;
+        // if(character == 127){
+        //     string[curIndex] = '\0';
+        //     curIndex--;
+        //     string[curIndex] = '\0';
+        //     brdWriteCharacterIntoUart('\b');
+        // }
+        putchar(character);
+        string[curIndex] = character;
+        curIndex++;
+    }
+    string[curIndex] = '\0';
+    putchar('\n');
+}
+
 // klibc but i make my own functions that don't exist anywhere else :screaming:
 // yes this file will be a bunch of puts clones for different stuff with a bunch of buffers
 void xputs(uint64_t hexadecimal){

@@ -12,7 +12,6 @@ void chunk_allocator_setup(){
     *(volatile uint64_t*)curMem = 0;
 }
 
-
 void* allocate_single_chunk(){
     for(uint64_t i = memaddr; i < curMem; i+=0x1000){
         if(*(volatile uint64_t*)i == 0){
@@ -29,4 +28,35 @@ void* allocate_single_chunk(){
 
 void free_single_chunk(void* address){
     *(volatile uint64_t*)(address - 8) = 0; 
+}
+
+void* allocate_multiple_chunks(uint64_t amount){
+    for(uint64_t i = memaddr; i < curMem; i+=0x1000){
+        if(*(volatile uint64_t*)i == 0){
+            uint64_t valid = 1;
+            for(uint64_t j = i; j < i + amount * 0x1000; j+=0x1000){
+                if(*(volatile uint64_t*)j != 0){
+                    valid = 0;
+                    break;
+                }
+            }
+            if(valid != 1) continue;
+            for(uint64_t j = i; j < i + amount * 0x1000; j+=0x1000){
+                *(volatile uint64_t*)j = 1;
+            }
+            return (void*)i + 8;
+        }
+    }
+    uint64_t return_value = curMem += 0x1000;
+    for (uint64_t j = 0; j < amount; j++) {
+        *(volatile uint64_t*)curMem = 1;
+        curMem += 0x1000;
+    }
+    return (void*)return_value + 8;
+}
+
+void free_multiple_chunks(void* address, uint64_t amount){
+    for(uint64_t i = (uint64_t)address; i < (uint64_t)address + amount * 0x1000; i+=0x1000){
+        *(volatile uint64_t*)(i - 8) = 0; 
+    }
 }

@@ -28,8 +28,14 @@ static uint32_t baudrate = 0;
 static uint32_t data_bits = 0;
 static uint32_t stop_bits = 0;
 
+
+
 static inline volatile uint32_t* reg(uint32_t offset){
     return (volatile uint32_t*)UART_ADDRESS + offset;
+}
+
+static inline volatile uint8_t* reg8(uint32_t offset){
+    return (volatile uint8_t*)UART_ADDRESS + offset;
 }
 
 static inline void calculate_divisors(uint32_t* integer, uint32_t* frac){
@@ -69,7 +75,7 @@ static inline void reset(){
 }
 
 void setup_uart(){
-    base_clock = 48000000;
+    base_clock = 30000000;
     baudrate = 115200;
     data_bits = 8;
     stop_bits = 1;
@@ -79,12 +85,16 @@ void setup_uart(){
 
 void write_to_uart(uint8_t c){
     wait_tx_complete();
-    for(int i = 0; i < 1000000; i++);
     *reg(DR_OFFSET) = c;
-    //*(volatile uint8_t*)UART_ADDRESS = c;
 }
 
 uint8_t read_from_uart_without_blocking(){
+    return *reg(DR_OFFSET);
+}
+
+uint8_t read_from_uart(){
+    // TODO: make the 0x18 offset a define with a name
+    while(*reg8(0x18) & (1 << 4));
     return *reg(DR_OFFSET);
 }
 

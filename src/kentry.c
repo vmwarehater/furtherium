@@ -1,12 +1,11 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "arch/dumpreg.h"
 #include "arch/exception.h"
 #include "board/coreinit.h"
-#include "board/rtc.h"
-#include "board/uart.h"
+#include "system/coredevices/coredev.h"
 #include "system/klibc/puts.h"
+
 #include "system/mem/chunkalloc.h"
 #include "system/misc.h"
 
@@ -18,14 +17,12 @@ extern uint64_t sp_top;
 
 void kernel_entry(void){
     setup_core_system();
-    setup_uart();
+    create_scheme("device");
+    setup_core_devices();
     load_exception_vector();
     chunk_allocator_setup();  
+    puts("Loaded Core Utilites.....\n\n");
 
-    puts("Loading Furtherium.....\n\n");
-
-    create_scheme("device");
-    
     char* h = allocate_single_chunk();
 
     xputs((uint64_t)h);
@@ -39,9 +36,8 @@ void kernel_entry(void){
     free_multiple_chunks(pp, 10);
     char* p = allocate_multiple_chunks(4);
     xputs((uint64_t)p);
-    
     while(1){
-        write_to_uart(get_value_from_rtc());
+        putchar((uint64_t)recv_from_url("device:rtc", 1));
         delay_execution(1);
     }
 }

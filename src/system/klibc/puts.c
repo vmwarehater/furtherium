@@ -1,20 +1,35 @@
 #include "puts.h"
-#include "../../board/uart.h"
+#include "../uri/uri.h"
 #include "strings.h"
 
 
 
 
 
-
-void puts(char* string){
-    write_string_to_uart(string);
-    write_string_to_uart("\n");
+void putchar(char c){
+    send_to_url("device:uart\\write\\char", &c, strlen("\n") + 1);
 }
 
 void puts_no_newline(char* string){
-    write_string_to_uart(string);
+    while(*string != '\0'){
+        putchar(*string);
+        string++;
+    }
 }
+
+void puts(char* string){
+    puts_no_newline(string);
+    putchar('\n');
+}
+
+char getchar(){
+    return (char)((uint64_t)recv_from_url("device:uart\\read\\blocking", 1));
+}
+
+char getchar_unblocking(){
+    return (char)((uint64_t)recv_from_url("device:uart\\read\\unblocking", 1));
+}
+
 // klibc but i make my own functions that don't exist anywhere else :screaming:
 // yes this file will be a bunch of puts clones for different stuff with a bunch of buffers
 void xputs(uint64_t hexadecimal){

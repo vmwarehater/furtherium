@@ -21,14 +21,14 @@
 
 typedef struct _host {
     char name[NAMING_SIZE];
-    void (*SendHandler)(void* data, size_t size, char* path);
-    void* (*RecvHandler)(size_t data, char* path);
+    void (*send_handler)(void* data, size_t size, char* path);
+    void* (*recv_handler)(size_t data, char* path);
 } host_t;
 
 uint8_t create_scheme(char* scheme_name);
 uint8_t create_host(char* scheme_name, host_t host);
 uint8_t send_to_url(char* url, void* data, uint64_t size);
 void* recv_from_url(char* url, uint64_t size);
-
+host_t* return_hosts_from_scheme(char* scheme, int* amount);
 
 #endif

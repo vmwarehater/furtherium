@@ -1,4 +1,9 @@
-#include "../board/rtc.h"
+#include "uri/uri.h"
+
+
+
+
+
 
 
 
@@ -6,8 +11,8 @@
 
 
 void delay_execution(uint64_t seconds){
-    int target_sec = get_value_from_rtc() + seconds;
-    while(!(get_value_from_rtc() >= target_sec)){
+    int target_sec = (uint64_t)recv_from_url("device:rtc", 1) + seconds;
+    while(!((uint64_t)recv_from_url("device:rtc", 1) >= target_sec)){
         continue;
     }
 }

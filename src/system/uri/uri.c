@@ -34,8 +34,8 @@ uint8_t create_host(char* scheme_name, host_t host){
                 return 1;
             }
             strcpy_s(host.name, schemes[i].hosts[schemes[i].curHost].name, NAMING_SIZE);
-            schemes[i].hosts[schemes[i].curHost].RecvHandler = host.RecvHandler;
-            schemes[i].hosts[schemes[i].curHost].SendHandler = host.SendHandler;
+            schemes[i].hosts[schemes[i].curHost].recv_handler = host.recv_handler;
+            schemes[i].hosts[schemes[i].curHost].send_handler = host.send_handler;
             schemes[i].curHost++;
             return 0;
         }
@@ -69,7 +69,7 @@ uint8_t send_to_url(char* url, void* data, uint64_t size){
         }
     }
     if(hos == -1) return 2;
-    schemes[sch].hosts[hos].SendHandler(data, size, path);
+    schemes[sch].hosts[hos].send_handler(data, size, path);
     return 0;
 }
 
@@ -100,5 +100,16 @@ void* recv_from_url(char* url, uint64_t size){
         }
     }
     if(hos == -1) return NULL;
-    return schemes[sch].hosts[hos].RecvHandler(size, path);
+    return schemes[sch].hosts[hos].recv_handler(size, path);
+}
+
+
+host_t* return_hosts_from_scheme(char* scheme, int* amount){
+    for(int i = 0; i <= curScheme; i++){
+        if(strcmp(scheme, schemes[i].name) == 0){
+            *amount = schemes[i].curHost;
+            return schemes[i].hosts;
+        }
+    }
+    return NULL;
 }

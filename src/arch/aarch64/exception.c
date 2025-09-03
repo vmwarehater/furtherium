@@ -1,18 +1,17 @@
 #include "../exception.h"
-#include "../../board/uart.h"
 #include "../dumpreg.h"
-
+#include "../../system/klibc/puts.h"
 
 
 
 void exception_unimplemented(){
-    write_string_to_uart("!! Unknown Exception has Occured, halting system !!");
+    puts("!! Unknown exception has occured, halting system !!");
     while(1){continue;}
 }
 
 void exception_error(){
-    write_string_to_uart("!!! An error has occured, dumping registers !!!\n\n\n");
+    puts("\n\n\n!!! An error has occured, dumping registers !!!\n\n\n");
     dump_and_print_registers();
-    write_string_to_uart("\n!!! Halting System !!!\n");
+    puts("\n!!! Halting System !!!\n");
     while(1){continue;}
 }

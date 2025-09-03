@@ -1,5 +1,6 @@
 #include "strings.h"
 #include "maths.h"
+#include <stddef.h>
 #include <stdint.h>
 
 
@@ -79,6 +80,14 @@ int strsplit(char* str, char delimeter, char* res1,
     return 0;
 }
 
+size_t strlen(const char* string){
+    size_t i = 0;
+    while(*string != '\0'){
+        string++;
+        i++;
+    }
+    return i;
+}
 
 void* memcpy(void* dest, const void* src, size_t size){
     volatile uint8_t* pdest = (volatile uint8_t*)dest;

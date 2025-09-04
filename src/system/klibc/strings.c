@@ -5,6 +5,7 @@
 
 
 
+
 char* strcpy_s(char* src, char* dest, size_t size){
     int i = 0;
     while(*src != '\0' && i <= size - 2){
@@ -142,3 +143,45 @@ uint8_t xtoa(uint64_t integer, char* string, uint16_t size){
     string[index] = '\0';
     return 0;
 } 
+
+
+
+uint64_t atoi_u64(const char* string){
+    uint64_t result = 0;
+
+    while(*string != '\0'){
+        if(*string >= 48 && *string <= 57){
+            result *= 10;
+            result += (*string - 48);
+        }
+        string++;
+    }
+    return result;
+}
+
+int atoi(const char* string){
+    int result = 0;
+
+    while(*string != '\0'){
+        if(*string >= 48 && *string <= 57){
+            result *= 10;
+            result += (*string - 48);
+        }
+        string++;
+    }
+    return result;
+}
+
+
+uint64_t atox_u64(const char* string){
+    uint64_t result = 0;
+
+    while(*string != '\0'){
+        if(*string >= 48 && *string <= 57 || *string >= 65 && *string <= 70){
+            result *= 16;
+            result += (*string - 48);
+        }
+        string++;
+    }
+    return result;
+}

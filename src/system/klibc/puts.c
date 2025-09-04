@@ -7,7 +7,7 @@
 
 
 void putchar(char c){
-    send_to_url("device:uart\\write\\char", &c, strlen("\n") + 1);
+    send_to_url("device:uart\\write\\char", &c, sizeof(char));
 }
 
 void puts_no_newline(char* string){
@@ -65,3 +65,10 @@ void xputs(uint64_t hexadecimal){
     puts(s);
 }
 
+
+void xputs_no_newline(uint64_t hexadecimal){
+    char s[512];
+    xtoa((uint64_t)hexadecimal, s, 30);
+    puts_no_newline("0x");
+    puts_no_newline(s);
+}

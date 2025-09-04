@@ -55,12 +55,12 @@ static inline void wait_tx_complete(){
 }
 
 static inline void reset(){
-    *(volatile uint64_t*)GPPUD_ADDRESS = 0x00000000;
-    delay(150);
-    *(volatile uint64_t*)0xFE200098 = (1 << 14) | (1 << 15);
-    delay(150);
-    *(volatile uint64_t*)0xFE200098 = 0x00000000;
-    *reg(ICR_OFFSET) = 0x7FF;
+    // *(volatile uint64_t*)GPPUD_ADDRESS = 0x00000000;
+    // delay(150);
+    // *(volatile uint64_t*)0xFE200098 = (1 << 14) | (1 << 15);
+    // delay(150);
+    // *(volatile uint64_t*)0xFE200098 = 0x00000000;
+    // *reg(ICR_OFFSET) = 0x7FF;
     uint32_t cr = *reg(CR_OFFSET);
     uint32_t lcr = *reg(LCR_OFFSET);
     uint32_t ibrd, fbrd;

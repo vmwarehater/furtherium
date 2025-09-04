@@ -3,13 +3,11 @@
 #include <stdint.h>
 #include "arch/exception.h"
 #include "board/coreinit.h"
-#include "board/uart.h"
 #include "system/coredevices/coredev.h"
 #include "system/klibc/puts.h"
 
 #include "system/kshell/kshell.h"
 #include "system/mem/chunkalloc.h"
-#include "system/misc.h"
 
 #include "system/uri/uri.h"
 
@@ -39,7 +37,7 @@ void kernel_entry(void){
     char* p = allocate_multiple_chunks(4);
     xputs((uint64_t)p);
     
-
+    puts("\n\nKernel finished and no init found, starting kernel debugger.....");
     // system ends, start emergency shell on the UART
     begin_backup_kernel_shell();
 }

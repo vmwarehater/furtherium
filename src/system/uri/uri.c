@@ -1,16 +1,20 @@
 #include "uri.h"
 #include <stddef.h>
 #include "../klibc/strings.h"
-
-
+#include "../mem/chunkalloc.h"
 #define AMOUNT_OF_SCHEMES 10
 #define AMOUNT_OF_HOSTS_PER_SCHEME 20
 
+
+
+
 typedef struct _scheme {
     char name[NAMING_SIZE];
-    host_t hosts[AMOUNT_OF_HOSTS_PER_SCHEME];
+    host_llist_t* list;
+    host_llist_t* initial;
     uint64_t curHost;
 } scheme_t;
+
 
 
 scheme_t schemes[AMOUNT_OF_SCHEMES];
@@ -22,6 +26,9 @@ uint8_t create_scheme(char* scheme_name){
     }
     strcpy_s(scheme_name, schemes[curScheme].name, NAMING_SIZE);
     schemes[curScheme].curHost = 0;
+    schemes[curScheme].list = (host_llist_t*)allocate_single_chunk();
+    schemes[curScheme].initial = schemes[curScheme].list;
+    schemes[curScheme].initial->isInital = 1;
     curScheme++;
     return 0;
 }
@@ -29,14 +36,16 @@ uint8_t create_scheme(char* scheme_name){
 
 uint8_t create_host(char* scheme_name, host_t host){
     for(int i = 0; i <= curScheme; i++){
+
         if(strcmp(scheme_name, schemes[i].name) == 0){
-            if(schemes[i].curHost >= AMOUNT_OF_HOSTS_PER_SCHEME - 1){
-                return 1;
-            }
-            strcpy_s(host.name, schemes[i].hosts[schemes[i].curHost].name, NAMING_SIZE);
-            schemes[i].hosts[schemes[i].curHost].recv_handler = host.recv_handler;
-            schemes[i].hosts[schemes[i].curHost].send_handler = host.send_handler;
-            schemes[i].curHost++;
+            schemes[i].list->next = (host_llist_t*)allocate_single_chunk();
+            if(schemes[i].list->next == NULL) return 1;
+            schemes[i].list->next->isInital = 0;
+            schemes[i].list->next->prev = schemes[i].list;
+            schemes[i].list = schemes[i].list->next;
+            strcpy_s(host.name, schemes[i].list->host.name, NAMING_SIZE);
+            schemes[i].list->host.recv_handler = host.recv_handler;
+            schemes[i].list->host.send_handler = host.send_handler;
             return 0;
         }
     }
@@ -49,13 +58,14 @@ uint8_t send_to_url(char* url, void* data, uint64_t size){
     char host[NAMING_SIZE];
     char path[1024];
     int sch = -1;
-    int hos = -1;
+    host_llist_t* hos = NULL;
     strsplit(url, 
         ':', scheme, 
         NAMING_SIZE, hostandpath, NAMING_SIZE + 1024);
     strsplit(hostandpath, 
         '\\', host, 
         NAMING_SIZE, path,1024);
+
     for(int i = 0; i <= curScheme; i++){
         if(strcmp(scheme, schemes[i].name) == 0){
             sch = i;
@@ -63,13 +73,22 @@ uint8_t send_to_url(char* url, void* data, uint64_t size){
         }
     }
     if(sch == -1) return 1;
-    for(int i = 0; i <= schemes[sch].curHost; i++){
-        if(strcmp(host, schemes[sch].hosts[i].name) == 0){
-            hos = i;
+    host_llist_t* cur = schemes[sch].list;
+    schemes[sch].list = schemes[sch].initial;
+    while(schemes[sch].list != NULL){
+        if(schemes[sch].list->isInital == 1){
+            schemes[sch].list = schemes[sch].list->next;
+            continue;
+        } 
+        if(strcmp(host, schemes[sch].list->host.name) == 0){
+            hos = schemes[sch].list;
+            break;
         }
+        
     }
-    if(hos == -1) return 2;
-    schemes[sch].hosts[hos].send_handler(data, size, path);
+    schemes[sch].list = cur;
+    if(hos == NULL) return 2;
+    hos->host.send_handler(data, size, path);
     return 0;
 }
 
@@ -80,7 +99,7 @@ void* recv_from_url(char* url, uint64_t size){
     char host[NAMING_SIZE];
     char path[1024];
     int sch = -1;
-    int hos = -1;
+    host_llist_t* hos = NULL;
     strsplit(url, 
         ':', scheme, 
         NAMING_SIZE, hostandpath, NAMING_SIZE + 1024);
@@ -94,21 +113,28 @@ void* recv_from_url(char* url, uint64_t size){
         }
     }
     if(sch == -1) return NULL;
-    for(int i = 0; i <= schemes[sch].curHost; i++){
-        if(strcmp(host, schemes[sch].hosts[i].name) == 0){
-            hos = i;
+    host_llist_t* cur = schemes[sch].list;
+    schemes[sch].list = schemes[sch].initial;
+    while(schemes[sch].list != NULL){
+        if(schemes[sch].list->isInital == 1){
+            schemes[sch].list = schemes[sch].list->next;
+            continue;
+        } 
+        if(strcmp(host, schemes[sch].list->host.name) == 0){
+            hos = schemes[sch].list;
         }
+        schemes[sch].list = schemes[sch].list->next;
     }
-    if(hos == -1) return NULL;
-    return schemes[sch].hosts[hos].recv_handler(size, path);
+    schemes[sch].list = cur;
+    if(hos == NULL) return NULL;
+    return hos->host.recv_handler(size, path);
 }
 
 
-host_t* return_hosts_from_scheme(char* scheme, int* amount){
+host_llist_t* return_hosts_from_scheme(char* scheme){
     for(int i = 0; i <= curScheme; i++){
         if(strcmp(scheme, schemes[i].name) == 0){
-            *amount = schemes[i].curHost;
-            return schemes[i].hosts;
+            return schemes[i].initial;
         }
     }
     return NULL;

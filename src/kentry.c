@@ -17,10 +17,11 @@ extern uint64_t sp_top;
 
 void kernel_entry(void){
     setup_core_system();
+    chunk_allocator_setup();  
+
     create_scheme("device");
     setup_core_devices();
     load_exception_vector();
-    chunk_allocator_setup();  
     puts("Loaded Core Utilites.....\n\n");
 
     char* h = allocate_single_chunk();

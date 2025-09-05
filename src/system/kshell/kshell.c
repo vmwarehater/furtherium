@@ -77,13 +77,19 @@ static inline uint8_t list_hosts(char* arguments){
         return 1;
     }
     int amount;
-    host_t* h = return_hosts_from_scheme(arguments, &amount);
-    if(h == NULL){
+    host_llist_t* host_list = return_hosts_from_scheme(arguments);
+    if(host_list == NULL){
         puts("couldn't find any hosts");
+        return 1;
     }
     puts("\n----------------------------------------");
-    for(int i = 0; i < amount; i++){
-        puts(h[i].name);
+    while(host_list != NULL){
+        if(host_list->isInital == 1){
+            host_list = host_list->next;
+            continue;
+        } 
+        puts(host_list->host.name);
+        host_list = host_list->next;
     }
     puts("----------------------------------------\n");
     return 0;

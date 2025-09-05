@@ -2,14 +2,17 @@
 #include "../dumpreg.h"
 #include "../../system/klibc/puts.h"
 #include "../../system/kshell/kshell.h"
-
+#include "../../board/uart.h"
 
 void exception_unimplemented(){
+    write_to_uart('s');
     puts("!! Unknown exception has occured, halting system !!");
     while(1){continue;}
 }
 
 void exception_error(){
+        write_to_uart('p');
+
     puts("\n\n\n!!! An error has occured, dumping registers !!!\n\n\n");
     dump_and_print_registers();
     puts("\n\n\n!!! Starting Emergency Shell !!!\n\n\n");

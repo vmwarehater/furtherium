@@ -2,11 +2,9 @@
 #include <stddef.h>
 #include "../klibc/strings.h"
 #include "../mem/chunkalloc.h"
+
+
 #define AMOUNT_OF_SCHEMES 10
-#define AMOUNT_OF_HOSTS_PER_SCHEME 20
-
-
-
 
 typedef struct _scheme {
     char name[NAMING_SIZE];
@@ -36,7 +34,6 @@ uint8_t create_scheme(char* scheme_name){
 
 uint8_t create_host(char* scheme_name, host_t host){
     for(int i = 0; i <= curScheme; i++){
-
         if(strcmp(scheme_name, schemes[i].name) == 0){
             schemes[i].list->next = (host_llist_t*)allocate_single_chunk();
             if(schemes[i].list->next == NULL) return 1;

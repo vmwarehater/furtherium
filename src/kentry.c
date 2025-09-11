@@ -79,11 +79,12 @@ void kernel_entry(void){
     // func 0x1 
     ins[13] = 0x9;
     ins[14] = 0x1;
-    // kcall
-    ins[15] = 0x6;
+    // func 0x2 (would've caused a crash before, now does well nothing)
+    ins[15] = 0x9;
+    ins[16] = 0x2;
     // jmp 0x1
-    ins[16] = 0x5;
-    ins[17] = 0x1;
+    ins[17] = 0x5;
+    ins[18] = 0x1;
     interpret_vm_bytecode(ins);
     
     puts("\n\nKernel finished and no init found, starting kernel debugger.....");

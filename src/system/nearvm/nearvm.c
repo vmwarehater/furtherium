@@ -13,6 +13,8 @@ typedef struct _func {
     uint64_t key;
     uint64_t curbycode;
 } func_t;
+
+
 enum instructions {
     ADD = 0x0,
     SUB = 0x1,
@@ -27,7 +29,8 @@ enum instructions {
 };
 
 enum SPECIAL_REGISTERS {
-    FUNC_AM = 0
+    FUNC_AM = 0,
+    KILL_P = 1
 };
 
 static inline void add_ins(uint64_t* bytecode, uint64_t cur_reg){
@@ -73,7 +76,7 @@ static inline void store_ins(uint64_t* bytecode, uint64_t cur_reg){
 static inline void jump_ins(uint64_t* bytecode, func_t* stack, uint64_t* cur_reg){
     uint64_t val = *cur_reg;
     if(bytecode[val + 1] == (uint64_t)NULL) return;
-    for(uint64_t i = 0; i >= specreg[FUNC_AM]; i++){
+    for(uint64_t i = 0; i < specreg[FUNC_AM]; i++){
         if(stack[i].key == bytecode[val + 1]){
             *cur_reg = stack[i].curbycode;
             return;
@@ -84,11 +87,19 @@ static inline void jump_ins(uint64_t* bytecode, func_t* stack, uint64_t* cur_reg
 static inline void func_ins(uint64_t* bytecode, func_t* stack, uint64_t cur_reg){
     if(bytecode[cur_reg + 1] == (uint64_t)NULL) return;
     if(specreg[FUNC_AM] * sizeof(uint64_t) >= 0x1000){
+        puts("ERROR: stack has been filled, killing process to avoid stack overflow");
+        specreg[KILL_P] = 1;
         return;
     }
-    puts("called again");
+    for(uint64_t i = 0; i < specreg[FUNC_AM]; i++){
+        if(stack[i].key == bytecode[cur_reg + 1]){
+            return;
+        }
+    }
+    xputs(specreg[FUNC_AM] * sizeof(uint64_t));
     stack[specreg[FUNC_AM]].key = bytecode[cur_reg + 1];
     stack[specreg[FUNC_AM]].curbycode = cur_reg;
+    specreg[FUNC_AM]++;
 }
 
 static inline void kernel_call_ins(){
@@ -112,7 +123,10 @@ void interpret_vm_bytecode(uint64_t* bytecode){
     uint64_t curbycode = 0;
     func_t* stack = allocate_multiple_chunks(4); // 4Kbs
     while(run == 1){
-        if(!bytecode[curbycode]) return;
+        if(specreg[KILL_P] == 1 || !bytecode[curbycode]){
+            free_multiple_chunks(stack, 4);
+            return;
+        } 
         switch(bytecode[curbycode]){
             case ADD:
                 add_ins(bytecode, curbycode);
@@ -157,7 +171,6 @@ void interpret_vm_bytecode(uint64_t* bytecode){
         }
     }
     free_multiple_chunks(stack, 4);
-    
 }
 
 void interpret_vm_bytecode_line(uint64_t* bytecode){

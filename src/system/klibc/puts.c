@@ -65,6 +65,14 @@ void xputs(uint64_t hexadecimal){
     puts(s);
 }
 
+void xputs_a(char* string, uint64_t hexadecimal){
+    puts_no_newline(string);
+    puts_no_newline(": ");
+    char s[512];
+    xtoa((uint64_t)hexadecimal, s, 30);
+    puts_no_newline("0x");
+    puts(s);
+}
 
 void xputs_no_newline(uint64_t hexadecimal){
     char s[512];

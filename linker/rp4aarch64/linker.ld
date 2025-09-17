@@ -8,6 +8,7 @@ SECTIONS
     __start = .;
     __text_start = .;
     .text : {
+        KEEP(*(.text.boot))
         *(.text)
     }
     . = ALIGN(4096);

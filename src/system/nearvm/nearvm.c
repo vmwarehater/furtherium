@@ -25,87 +25,113 @@ enum instructions {
     KCALL = 0x6,
     MUL = 0x7,
     DIV = 0x8,
-    FUNC = 0x9
+    FUNC = 0x9,
+    CMPE = 0xA,
+    CMPL = 0xB,
+    CMPG = 0xC,
+    FUNCASKIP = 0xD
 };
 
 enum SPECIAL_REGISTERS {
     FUNC_AM = 0,
-    KILL_P = 1
+    KILL_P = 1,
+    PC = 2
 };
 
-static inline void add_ins(uint64_t* bytecode, uint64_t cur_reg){
-    if(bytecode[cur_reg + 1] >= 30 || bytecode[cur_reg + 2] >= 30
-        || bytecode[cur_reg + 3] >= 30) return;
-    genreg[bytecode[cur_reg + 1]] = genreg[bytecode[cur_reg + 2]] + genreg[bytecode[cur_reg + 3]];
+static inline void add_ins(uint64_t* bytecode){
+    if(bytecode[specreg[PC] + 1] >= 30 || bytecode[specreg[PC] + 2] >= 30
+        || bytecode[specreg[PC] + 3] >= 30) return;
+    genreg[bytecode[specreg[PC] + 1]] = genreg[bytecode[specreg[PC] + 2]] + genreg[bytecode[specreg[PC] + 3]];
 }
 
-static inline void sub_ins(uint64_t* bytecode, uint64_t cur_reg){
-    if(bytecode[cur_reg + 1] >= 30 || bytecode[cur_reg + 2] >= 30
-        || bytecode[cur_reg + 3] >= 30) return;
-    genreg[bytecode[cur_reg + 1]] = genreg[bytecode[cur_reg + 2]] - genreg[bytecode[cur_reg + 3]];
+static inline void sub_ins(uint64_t* bytecode){
+    if(bytecode[specreg[PC] + 1] >= 30 || bytecode[specreg[PC] + 2] >= 30
+        || bytecode[specreg[PC] + 3] >= 30) return;
+    genreg[bytecode[specreg[PC] + 1]] = genreg[bytecode[specreg[PC] + 2]] - genreg[bytecode[specreg[PC] + 3]];
 }
 
-static inline void mul_ins(uint64_t* bytecode, uint64_t cur_reg){
-    if(bytecode[cur_reg + 1] >= 30 || bytecode[cur_reg + 2] >= 30
-        || bytecode[cur_reg + 3] >= 30) return;
-    genreg[bytecode[cur_reg + 1]] = genreg[bytecode[cur_reg + 2]] * genreg[bytecode[cur_reg + 3]];
+static inline void mul_ins(uint64_t* bytecode){
+    if(bytecode[specreg[PC] + 1] >= 30 || bytecode[specreg[PC] + 2] >= 30
+        || bytecode[specreg[PC] + 3] >= 30) return;
+    genreg[bytecode[specreg[PC] + 1]] = genreg[bytecode[specreg[PC] + 2]] * genreg[bytecode[specreg[PC] + 3]];
 }
 
-static inline void div_ins(uint64_t* bytecode, uint64_t cur_reg){
-    if(bytecode[cur_reg + 1] >= 30 || bytecode[cur_reg + 2] >= 30
-        || bytecode[cur_reg + 3] >= 30) return;
-    genreg[bytecode[cur_reg + 1]] = genreg[bytecode[cur_reg + 2]] / genreg[bytecode[cur_reg + 3]];
+static inline void div_ins(uint64_t* bytecode){
+    if(bytecode[specreg[PC] + 1] >= 30 || bytecode[specreg[PC] + 2] >= 30
+        || bytecode[specreg[PC] + 3] >= 30) return;
+    genreg[bytecode[specreg[PC] + 1]] = genreg[bytecode[specreg[PC] + 2]] / genreg[bytecode[specreg[PC] + 3]];
 }
 
 
-static inline void mov_ins(uint64_t* bytecode, uint64_t cur_reg){
-    if(bytecode[cur_reg + 1] >= 30 || bytecode[cur_reg + 2] >= 30) return;
-    genreg[bytecode[cur_reg + 1]] = bytecode[cur_reg + 2];
+static inline void mov_ins(uint64_t* bytecode){
+    if(bytecode[specreg[PC] + 1] >= 30 || bytecode[specreg[PC] + 2] >= 30) return;
+    genreg[bytecode[specreg[PC] + 1]] = bytecode[specreg[PC] + 2];
 }
 
-static inline void load_ins(uint64_t* bytecode, uint64_t cur_reg){
-    if(bytecode[cur_reg + 1] == (uint64_t)NULL || bytecode[cur_reg + 2] == (uint64_t)NULL) return;
-
-}
-
-static inline void store_ins(uint64_t* bytecode, uint64_t cur_reg){
-    if(bytecode[cur_reg + 1] == (uint64_t)NULL || bytecode[cur_reg + 2] == (uint64_t)NULL) return;
+static inline void load_ins(uint64_t* bytecode){
+    if(bytecode[specreg[PC] + 1] == (uint64_t)NULL || bytecode[specreg[PC] + 2] == (uint64_t)NULL) return;
 
 }
 
-static inline void jump_ins(uint64_t* bytecode, func_t* stack, uint64_t* cur_reg){
-    uint64_t val = *cur_reg;
+static inline void store_ins(uint64_t* bytecode){
+    if(bytecode[specreg[PC] + 1] == (uint64_t)NULL || bytecode[specreg[PC] + 2] == (uint64_t)NULL) return;
+
+}
+
+static inline void jump_ins(uint64_t* bytecode, func_t* stack){
+    uint64_t val = specreg[PC];
     if(bytecode[val + 1] == (uint64_t)NULL) return;
     for(uint64_t i = 0; i < specreg[FUNC_AM]; i++){
         if(stack[i].key == bytecode[val + 1]){
-            *cur_reg = stack[i].curbycode;
+            specreg[PC] = stack[i].curbycode;
             return;
         }
     }
 }
 
-static inline void func_ins(uint64_t* bytecode, func_t* stack, uint64_t cur_reg){
-    if(bytecode[cur_reg + 1] == (uint64_t)NULL) return;
+static inline void func_ins(uint64_t* bytecode, func_t* stack){
+    if(bytecode[specreg[PC] + 1] == (uint64_t)NULL) return;
     if(specreg[FUNC_AM] * sizeof(uint64_t) >= 0x1000){
         puts("ERROR: stack has been filled, killing process to avoid stack overflow");
         specreg[KILL_P] = 1;
         return;
     }
     for(uint64_t i = 0; i < specreg[FUNC_AM]; i++){
-        if(stack[i].key == bytecode[cur_reg + 1]){
+        if(stack[i].key == bytecode[specreg[PC] + 1]){
             return;
         }
     }
-    xputs(specreg[FUNC_AM] * sizeof(uint64_t));
-    stack[specreg[FUNC_AM]].key = bytecode[cur_reg + 1];
-    stack[specreg[FUNC_AM]].curbycode = cur_reg;
+    //(specreg[FUNC_AM] * sizeof(uint64_t));
+    stack[specreg[FUNC_AM]].key = bytecode[specreg[PC] + 1];
+    stack[specreg[FUNC_AM]].curbycode = specreg[PC] + 3;
+    specreg[FUNC_AM]++;
+}
+
+static inline void func_ins_offset_1(uint64_t* bytecode, func_t* stack){
+    if(bytecode[specreg[PC] + 1] == (uint64_t)NULL){
+        return;
+    } 
+    if(specreg[FUNC_AM] * sizeof(uint64_t) >= 0x1000){
+        puts("ERROR: stack has been filled, killing process to avoid stack overflow");
+        specreg[KILL_P] = 1;
+        return;
+    }
+    for(uint64_t i = 0; i < specreg[FUNC_AM]; i++){
+        if(stack[i].key == bytecode[specreg[PC] + 1]){
+            return;
+        }
+    }
+    //(specreg[FUNC_AM] * sizeof(uint64_t));
+    stack[specreg[FUNC_AM]].key = bytecode[specreg[PC] + 1];
+    stack[specreg[FUNC_AM]].curbycode = specreg[PC] + 3;
+
     specreg[FUNC_AM]++;
 }
 
 static inline void kernel_call_ins(){
     switch (genreg[0]) {
         case 0:
-            xputs(genreg[1]);
+            xputs_a("kernel call", genreg[1]);
             break;
         case 1: {
             char* string = (char*)genreg[1];
@@ -117,87 +143,204 @@ static inline void kernel_call_ins(){
     }
 }
 
-
-void interpret_vm_bytecode(uint64_t* bytecode){
-    uint8_t run = 1;
-    uint64_t curbycode = 0;
-    func_t* stack = allocate_multiple_chunks(4); // 4Kbs
-    while(run == 1){
-        if(specreg[KILL_P] == 1 || !bytecode[curbycode]){
-            free_multiple_chunks(stack, 4);
+static inline void compare_less_then_ins(uint64_t* bytecode, func_t* stack){
+    uint64_t val = specreg[PC];
+    if(bytecode[val + 1] >= 30 || bytecode[val + 2] >= 30) return;
+    if(genreg[bytecode[val + 1]] >= genreg[bytecode[val + 2]]){
+        specreg[PC] += 4;
+        return;
+    } 
+    if(bytecode[val + 3] == (uint64_t)NULL) return;
+    for(uint64_t i = 0; i < specreg[FUNC_AM]; i++){
+        if(stack[i].key == bytecode[val + 3]){
+            specreg[PC] = stack[i].curbycode;
             return;
-        } 
-        switch(bytecode[curbycode]){
+        }
+    }
+}
+
+static inline void compare_greater_then_ins(uint64_t* bytecode, func_t* stack){
+    uint64_t val = specreg[PC];
+    if(bytecode[val + 1] >= 30 || bytecode[val + 2] >= 30) return;
+    if(genreg[bytecode[val + 1]] <= genreg[bytecode[val + 2]]){
+        specreg[PC] += 4;
+        return;
+    } 
+    if(bytecode[val + 3] == (uint64_t)NULL) return;
+    for(uint64_t i = 0; i < specreg[FUNC_AM]; i++){
+        if(stack[i].key == bytecode[val + 3]){
+            specreg[PC] = stack[i].curbycode;
+            return;
+        }
+    }
+}
+
+static inline void compare_equal_to_ins(uint64_t* bytecode, func_t* stack){
+    uint64_t val = specreg[PC];
+    if(bytecode[val + 1] >= 30 || bytecode[val + 2] >= 30) return;
+    if(genreg[bytecode[val + 1]] != genreg[bytecode[val + 2]]){
+        specreg[PC] += 4;
+        return;
+    } 
+    if(bytecode[val + 3] == (uint64_t)NULL) return;
+    for(uint64_t i = 0; i < specreg[FUNC_AM]; i++){
+        if(stack[i].key == bytecode[val + 3]){
+            specreg[PC] = stack[i].curbycode;
+            return;
+        }
+    }
+}
+
+static inline void func_and_skip_ins(uint64_t* bytecode, func_t* stack){
+    uint64_t val = specreg[PC];
+    func_ins_offset_1(bytecode, stack);
+
+    //specreg[PC] += 3;
+    for(int i = 0; i <= bytecode[val + 2]; i++){
+        if(bytecode[specreg[PC]] == NULL){
+            puts("ERROR! OVERFLOW");
+            specreg[KILL_P] = 1;
+            return;
+        }
+
+        switch(bytecode[specreg[PC]]){
             case ADD:
-                add_ins(bytecode, curbycode);
-                curbycode += 4;
+                specreg[PC] += 4;
                 break;
             case SUB:
-                sub_ins(bytecode, curbycode);
-                curbycode += 4;
+                specreg[PC] += 4;
                 break;
             case MOV:
-                mov_ins(bytecode, curbycode);
-                curbycode += 3;
+                specreg[PC] += 3;
                 break;
             case LD:
-                load_ins(bytecode, curbycode);
+                specreg[PC] += 3;
                 break;
             case STR:
-                store_ins(bytecode, curbycode);
+                specreg[PC] += 3;
                 break;
             case JMP:
-                jump_ins(bytecode, stack, &curbycode);
-                curbycode += 2;
+                specreg[PC] += 2;
                 break;
             case KCALL:
-                kernel_call_ins();
-                curbycode += 1;
+                specreg[PC] += 1;
                 break;
             case MUL:
-                mul_ins(bytecode, curbycode);
-                curbycode += 4;
+                specreg[PC] += 4;
                 break;
             case DIV:
-                div_ins(bytecode, curbycode);
-                curbycode += 4;
+                specreg[PC] += 4;
                 break;
             case FUNC:
-                func_ins(bytecode, stack, curbycode);
-                curbycode += 2;
+                specreg[PC] += 2;
+                break;
+            case CMPE:
+                specreg[PC] += 3;
+                break;
+            case FUNCASKIP:
+                specreg[PC] += 3;
                 break;
             default:
                 break;
         }
     }
+}
+
+
+void interpret_vm_bytecode(uint64_t* bytecode){
+    uint8_t run = 1;
+    func_t* stack = allocate_multiple_chunks(4); // 4Kbs
+    while(run == 1){
+        if(specreg[KILL_P] == 1 || !bytecode[specreg[PC]]){
+            free_multiple_chunks(stack, 4);
+            return;
+        } 
+        //xputs(specreg[PC]);
+        switch(bytecode[specreg[PC]]){
+            case ADD:
+                add_ins(bytecode);
+                specreg[PC] += 4;
+                break;
+            case SUB:
+                sub_ins(bytecode);
+                specreg[PC] += 4;
+                break;
+            case MOV:
+                mov_ins(bytecode);
+                specreg[PC] += 3;
+                break;
+            case LD:
+                load_ins(bytecode);
+                break;
+            case STR:
+                store_ins(bytecode);
+                break;
+            case JMP:
+                jump_ins(bytecode, stack);
+                //specreg[PC] += 2;
+                break;
+            case KCALL:
+                kernel_call_ins();
+                specreg[PC] += 1;
+                break;
+            case MUL:
+                mul_ins(bytecode);
+                specreg[PC] += 4;
+                break;
+            case DIV:
+                div_ins(bytecode);
+                specreg[PC] += 4;
+                break;
+            case FUNC:
+                func_ins(bytecode, stack);
+                specreg[PC] += 2;
+                break;
+            case CMPE:
+                compare_equal_to_ins(bytecode, stack);
+                break;
+            case CMPL:
+                compare_less_then_ins(bytecode, stack);
+                break;
+            case CMPG:
+                compare_greater_then_ins(bytecode, stack);
+                break;
+            case FUNCASKIP:
+                func_and_skip_ins(bytecode, stack);
+                break;
+            default:
+                goto EXIT;
+                break;
+        }
+    }
+    EXIT:
     free_multiple_chunks(stack, 4);
 }
 
 void interpret_vm_bytecode_line(uint64_t* bytecode){
     switch(bytecode[0]){
         case ADD:
-            add_ins(bytecode, 0);
+            add_ins(bytecode);
             break;
         case SUB:
-            sub_ins(bytecode, 0);
+            sub_ins(bytecode);
             break;
         case MOV:
-            mov_ins(bytecode, 0);
+            mov_ins(bytecode);
             break;
         case LD:
-            load_ins(bytecode, 0);
+            load_ins(bytecode);
             break;
         case STR:
-            store_ins(bytecode, 0);
+            store_ins(bytecode);
             break;
         case KCALL:
             kernel_call_ins();
             break;
         case MUL:
-            mul_ins(bytecode, 0);
+            mul_ins(bytecode);
             break;
         case DIV:
-            div_ins(bytecode, 0);
+            div_ins(bytecode);
             break;
         default:
             // in here call INVALID_BYTECODE signal to the process which called it
@@ -205,3 +348,4 @@ void interpret_vm_bytecode_line(uint64_t* bytecode){
             break;
     }
 }
+

@@ -13,7 +13,6 @@ target("aarch64-virt")
     add_asflags("--target=aarch64-none-elf -ffreestanding -nostdlib -fno-rtti", {force = true})
     add_ldflags("-nostdlib -T linker/virtaarch64/linker.ld", {force = true})
 
-
 target("stub")
     set_toolchains("clangk")
     set_kind("binary")

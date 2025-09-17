@@ -1,10 +1,10 @@
 run-aarch64-virt:
-	qemu-system-aarch64 -machine virt -cpu cortex-a57 -kernel furtherk.elf -m 512M \
+	qemu-system-aarch64 -machine virt -cpu cortex-a710 -kernel furtherk.elf -m 512M \
 		-serial mon:stdio -display sdl
 
 run-aarch64-rp4:
 	qemu-system-aarch64 -M raspi4b -serial mon:stdio -kernel furtherk.elf
-	
+
 clean:
 	rm -rf .xmake
 	rm -rf build

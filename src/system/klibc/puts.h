@@ -27,6 +27,7 @@ char getchar();
 char getchar_unblocking();
 void gets_s(char* string, uint16_t size, uint8_t cleanBuffer);
 void xputs(uint64_t hexadecimal);
+void xputs_a(char* string, uint64_t hexadecimal);
 void xputs_no_newline(uint64_t hexadecimal);
 
 

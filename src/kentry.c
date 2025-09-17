@@ -58,33 +58,68 @@ void kernel_entry(void){
     // ins3[0] = 0x6;
     // interpret_vm_bytecode_line(ins3);
     
-    uint64_t ins[20];
-    // mov r0, 0 (kcall checks for r0, 0 means print whatever is in r1)
-    ins[0] = 0x2;
-    ins[1] = 0x0;
-    ins[2] = 0x0;
-    // mov r2, 3
-    ins[3] = 0x2;
-    ins[4] = 0x2;
-    ins[5] = 0x3;
+    uint64_t ins[50];
+    int i = 0;
+    // funcaskip 0x1 3 (sets func there and skips the next 3 instructions)
+    ins[i++] = 0xD;
+    ins[i++] = 0x1;
+    ins[i++] = 3;
+
+    // mov r0, 0
+    ins[i++] = 0x2;
+    ins[i++] = 0x0;
+    ins[i++] = 0x0;
+
+    // mov r1, 1
+    ins[i++] = 0x2;
+    ins[i++] = 0x1;
+    ins[i++] = 1;   
+
+    // kcall
+    ins[i++] = 0x6;
+
+    // funcaskip 0x2 3 (sets func there and skips the next 3 instructions)
+    ins[i++] = 0xD;
+    ins[i++] = 0x2;
+    ins[i++] = 3;
+
+    // mov r0, 0
+    ins[i++] = 0x2;
+    ins[i++] = 0x0;
+    ins[i++] = 0x0;
+
+    // mov r1, 2
+    ins[i++] = 0x2;
+    ins[i++] = 0x1;
+    ins[i++] = 2;   
+
+    // kcall
+    ins[i++] = 0x6;
+
     // mov r3, 2
-    ins[6] = 0x2;
-    ins[7] = 0x3;
-    ins[8] = 0x2;
-    // sub r1, r2, r3
-    ins[9] = 0x8;
-    ins[10] = 0x1;
-    ins[11] = 0x2;
-    ins[12] = 0x3;
-    // func 0x1 
-    ins[13] = 0x9;
-    ins[14] = 0x1;
-    // func 0x2 (would've caused a crash before, now does well nothing)
-    ins[15] = 0x9;
-    ins[16] = 0x2;
-    // jmp 0x1
-    ins[17] = 0x5;
-    ins[18] = 0x1;
+    ins[i++] = 0x2;
+    ins[i++] = 0x3;
+    ins[i++] = 3;
+
+    // mov r4, 2
+    ins[i++] = 0x2;
+    ins[i++] = 0x4;
+    ins[i++] = 3;
+
+    // cmpe r3, r4, 0x2 (jumps to func 0x2 if r3 and r4 is equal)
+    ins[i++] = 0xA;
+    ins[i++] = 0x3;
+    ins[i++] = 0x4;
+    ins[i++] = 0x2;
+
+
+    // cmpg r3, r4, 0x2 (jumps to func 0x1 if r3 is greater then r4)
+    ins[i++] = 0xC;
+    ins[i++] = 0x3;
+    ins[i++] = 0x4;
+    ins[i++] = 0x1;
+    
+
     interpret_vm_bytecode(ins);
     
     puts("\n\nKernel finished and no init found, starting kernel debugger.....");

@@ -5,6 +5,7 @@
 
 
 
+
 uint64_t genreg[30] = {0};
 uint64_t specreg[10] = {0};
 
@@ -13,6 +14,7 @@ typedef struct _func {
     uint64_t key;
     uint64_t curbycode;
     uint64_t prev_func;
+    uint64_t prev_prev_pc;
 } func_t;
 
 
@@ -86,7 +88,9 @@ static inline void jump_ins(uint64_t* bytecode, func_t* stack){
     if(bytecode[val + 1] == (uint64_t)NULL) return;
     for(uint64_t i = 0; i < specreg[FUNC_AM]; i++){
         if(stack[i].key == bytecode[val + 1]){
-            specreg[PREV_PC] = specreg[PC] + 2;
+            stack[i].prev_func = specreg[PC] + 2;
+            stack[i].prev_prev_pc = specreg[PREV_PC];
+            specreg[PREV_PC] = i;
             specreg[PC] = stack[i].curbycode;
             return;
         }
@@ -157,7 +161,9 @@ static inline void compare_less_then_ins(uint64_t* bytecode, func_t* stack){
     if(bytecode[val + 3] == (uint64_t)NULL) return;
     for(uint64_t i = 0; i < specreg[FUNC_AM]; i++){
         if(stack[i].key == bytecode[val + 3]){
-            specreg[PREV_PC] = specreg[PC] + 4;
+            stack[i].prev_func = specreg[PC] + 4;
+            stack[i].prev_prev_pc = specreg[PREV_PC];
+            specreg[PREV_PC] = i;
             specreg[PC] = stack[i].curbycode;
             return;
         }
@@ -174,9 +180,10 @@ static inline void compare_greater_then_ins(uint64_t* bytecode, func_t* stack){
     if(bytecode[val + 3] == (uint64_t)NULL) return;
     for(uint64_t i = 0; i < specreg[FUNC_AM]; i++){
         if(stack[i].key == bytecode[val + 3]){
-            specreg[PREV_PC] = specreg[PC] + 4;
+            stack[i].prev_func = specreg[PC] + 4;
+            stack[i].prev_prev_pc = specreg[PREV_PC];
+            specreg[PREV_PC] = i;
             specreg[PC] = stack[i].curbycode;
-            
             return;
         }
     }
@@ -192,7 +199,9 @@ static inline void compare_equal_to_ins(uint64_t* bytecode, func_t* stack){
     if(bytecode[val + 3] == (uint64_t)NULL) return;
     for(uint64_t i = 0; i < specreg[FUNC_AM]; i++){
         if(stack[i].key == bytecode[val + 3]){
-            specreg[PREV_PC] = specreg[PC] + 4;
+            stack[i].prev_func = specreg[PC] + 4;
+            stack[i].prev_prev_pc = specreg[PREV_PC];
+            specreg[PREV_PC] = i;
             specreg[PC] = stack[i].curbycode;
             return;
         }
@@ -204,6 +213,7 @@ static inline void func_and_skip_ins(uint64_t* bytecode, func_t* stack){
     func_ins_offset_1(bytecode, stack);
 
     for(int i = 0; i <= bytecode[val + 2]; i++){
+        // clang hates this code, and im too lazy to find an alternative!
         if(bytecode[specreg[PC]] == NULL){
             puts("ERROR! OVERFLOW");
             specreg[KILL_P] = 1;
@@ -256,8 +266,9 @@ static inline void func_and_skip_ins(uint64_t* bytecode, func_t* stack){
     }
 }
 
-static inline void return_ins(){
-    specreg[PC] = specreg[PREV_PC];
+static inline void return_ins(func_t* stack){
+    specreg[PC] = stack[specreg[PREV_PC]].prev_func;
+    specreg[PREV_PC] = stack[specreg[PREV_PC]].prev_prev_pc;
 }
 
 void interpret_vm_bytecode(uint64_t* bytecode){
@@ -267,7 +278,6 @@ void interpret_vm_bytecode(uint64_t* bytecode){
         if(specreg[KILL_P] == 1 || !bytecode[specreg[PC]]){
             goto EXIT;
         } 
-        //xputs(specreg[PC]);
         switch(bytecode[specreg[PC]]){
             case ADD:
                 add_ins(bytecode);
@@ -319,7 +329,7 @@ void interpret_vm_bytecode(uint64_t* bytecode){
                 func_and_skip_ins(bytecode, stack);
                 break;
             case RET:
-                return_ins();
+                return_ins(stack);
                 break;
             default:
                 goto EXIT;

@@ -60,10 +60,11 @@ void kernel_entry(void){
     
     uint64_t ins[50];
     int i = 0;
+    
     // funcaskip 0x1 3 (sets func there and skips the next 3 instructions)
     ins[i++] = 0xD;
     ins[i++] = 0x1;
-    ins[i++] = 3;
+    ins[i++] = 4;
 
     // mov r0, 0
     ins[i++] = 0x2;
@@ -78,10 +79,13 @@ void kernel_entry(void){
     // kcall
     ins[i++] = 0x6;
 
+    // ret
+    ins[i++] = 0xE;
+
     // funcaskip 0x2 3 (sets func there and skips the next 3 instructions)
     ins[i++] = 0xD;
     ins[i++] = 0x2;
-    ins[i++] = 3;
+    ins[i++] = 4;
 
     // mov r0, 0
     ins[i++] = 0x2;
@@ -96,15 +100,19 @@ void kernel_entry(void){
     // kcall
     ins[i++] = 0x6;
 
+    // ret
+    ins[i++] = 0xE;
+
+
     // mov r3, 2
     ins[i++] = 0x2;
     ins[i++] = 0x3;
-    ins[i++] = 3;
+    ins[i++] = 4;
 
     // mov r4, 2
     ins[i++] = 0x2;
     ins[i++] = 0x4;
-    ins[i++] = 3;
+    ins[i++] = 4;
 
     // cmpe r3, r4, 0x2 (jumps to func 0x2 if r3 and r4 is equal)
     ins[i++] = 0xA;
@@ -113,7 +121,7 @@ void kernel_entry(void){
     ins[i++] = 0x2;
 
 
-    // cmpg r3, r4, 0x2 (jumps to func 0x1 if r3 is greater then r4)
+    // cmpg r3, r4, 0x1 (jumps to func 0x1 if r3 is greater then r4)
     ins[i++] = 0xC;
     ins[i++] = 0x3;
     ins[i++] = 0x4;

@@ -12,6 +12,7 @@ uint64_t specreg[10] = {0};
 typedef struct _func {
     uint64_t key;
     uint64_t curbycode;
+    uint64_t prev_func;
 } func_t;
 
 
@@ -29,13 +30,15 @@ enum instructions {
     CMPE = 0xA,
     CMPL = 0xB,
     CMPG = 0xC,
-    FUNCASKIP = 0xD
+    FUNCASKIP = 0xD,
+    RET = 0xE
 };
 
-enum SPECIAL_REGISTERS {
+enum special_registers {
     FUNC_AM = 0,
     KILL_P = 1,
-    PC = 2
+    PC = 2,
+    PREV_PC = 3
 };
 
 static inline void add_ins(uint64_t* bytecode){
@@ -83,6 +86,7 @@ static inline void jump_ins(uint64_t* bytecode, func_t* stack){
     if(bytecode[val + 1] == (uint64_t)NULL) return;
     for(uint64_t i = 0; i < specreg[FUNC_AM]; i++){
         if(stack[i].key == bytecode[val + 1]){
+            specreg[PREV_PC] = specreg[PC] + 2;
             specreg[PC] = stack[i].curbycode;
             return;
         }
@@ -153,6 +157,7 @@ static inline void compare_less_then_ins(uint64_t* bytecode, func_t* stack){
     if(bytecode[val + 3] == (uint64_t)NULL) return;
     for(uint64_t i = 0; i < specreg[FUNC_AM]; i++){
         if(stack[i].key == bytecode[val + 3]){
+            specreg[PREV_PC] = specreg[PC] + 4;
             specreg[PC] = stack[i].curbycode;
             return;
         }
@@ -169,7 +174,9 @@ static inline void compare_greater_then_ins(uint64_t* bytecode, func_t* stack){
     if(bytecode[val + 3] == (uint64_t)NULL) return;
     for(uint64_t i = 0; i < specreg[FUNC_AM]; i++){
         if(stack[i].key == bytecode[val + 3]){
+            specreg[PREV_PC] = specreg[PC] + 4;
             specreg[PC] = stack[i].curbycode;
+            
             return;
         }
     }
@@ -185,6 +192,7 @@ static inline void compare_equal_to_ins(uint64_t* bytecode, func_t* stack){
     if(bytecode[val + 3] == (uint64_t)NULL) return;
     for(uint64_t i = 0; i < specreg[FUNC_AM]; i++){
         if(stack[i].key == bytecode[val + 3]){
+            specreg[PREV_PC] = specreg[PC] + 4;
             specreg[PC] = stack[i].curbycode;
             return;
         }
@@ -195,7 +203,6 @@ static inline void func_and_skip_ins(uint64_t* bytecode, func_t* stack){
     uint64_t val = specreg[PC];
     func_ins_offset_1(bytecode, stack);
 
-    //specreg[PC] += 3;
     for(int i = 0; i <= bytecode[val + 2]; i++){
         if(bytecode[specreg[PC]] == NULL){
             puts("ERROR! OVERFLOW");
@@ -240,20 +247,25 @@ static inline void func_and_skip_ins(uint64_t* bytecode, func_t* stack){
             case FUNCASKIP:
                 specreg[PC] += 3;
                 break;
+            case RET:
+                specreg[PC] += 1;
+                break;
             default:
                 break;
         }
     }
 }
 
+static inline void return_ins(){
+    specreg[PC] = specreg[PREV_PC];
+}
 
 void interpret_vm_bytecode(uint64_t* bytecode){
     uint8_t run = 1;
     func_t* stack = allocate_multiple_chunks(4); // 4Kbs
     while(run == 1){
         if(specreg[KILL_P] == 1 || !bytecode[specreg[PC]]){
-            free_multiple_chunks(stack, 4);
-            return;
+            goto EXIT;
         } 
         //xputs(specreg[PC]);
         switch(bytecode[specreg[PC]]){
@@ -277,7 +289,6 @@ void interpret_vm_bytecode(uint64_t* bytecode){
                 break;
             case JMP:
                 jump_ins(bytecode, stack);
-                //specreg[PC] += 2;
                 break;
             case KCALL:
                 kernel_call_ins();
@@ -307,6 +318,9 @@ void interpret_vm_bytecode(uint64_t* bytecode){
             case FUNCASKIP:
                 func_and_skip_ins(bytecode, stack);
                 break;
+            case RET:
+                return_ins();
+                break;
             default:
                 goto EXIT;
                 break;
@@ -315,37 +329,3 @@ void interpret_vm_bytecode(uint64_t* bytecode){
     EXIT:
     free_multiple_chunks(stack, 4);
 }
-
-void interpret_vm_bytecode_line(uint64_t* bytecode){
-    switch(bytecode[0]){
-        case ADD:
-            add_ins(bytecode);
-            break;
-        case SUB:
-            sub_ins(bytecode);
-            break;
-        case MOV:
-            mov_ins(bytecode);
-            break;
-        case LD:
-            load_ins(bytecode);
-            break;
-        case STR:
-            store_ins(bytecode);
-            break;
-        case KCALL:
-            kernel_call_ins();
-            break;
-        case MUL:
-            mul_ins(bytecode);
-            break;
-        case DIV:
-            div_ins(bytecode);
-            break;
-        default:
-            // in here call INVALID_BYTECODE signal to the process which called it
-            // we don't have that infra yet so its a note for when we do implement it
-            break;
-    }
-}
-

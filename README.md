@@ -1,3 +1,8 @@
+# Project archived, go to Nearlands, which is a continuation of this
+
+https://github.com/ncc1700/nearlands
+
+
 # Futherium
 
 
